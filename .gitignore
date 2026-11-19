@@ -1,14 +1,9 @@
-# Secrets
-.env
-.env.local
-.env.*.local
-
 # Dependencies
 node_modules/
 .pnp
 .pnp.js
 
-# Testing
+# Testing & Coverage
 coverage/
 
 # Next.js build
@@ -17,20 +12,26 @@ out/
 build/
 dist/
 
-# OS and IDE files
+# Secrets and local config (never commit)
+.env
+.env.*
+!.env.example
+
+# Logs & OS junk
+*.log
 .DS_Store
 *.pem
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
 # Private Font Assets (Ogaranya Font License v1.0 - Must never be committed to public repos)
 *.zip
 *.otf
 *.ttf
+*.woff
+*.woff2
 OGARANYA/
 Ogaranya*/
 
-# Temporary
-test.txt
+# Internal Documentation, Business Plans & Learning Journal (kept local)
+docs/
+*.pdf
+CLAUDE.md

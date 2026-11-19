@@ -46,10 +46,35 @@ Foundational blueprint: `docs/PLAN.md` (based on `Ọjà Ọnà — MVP Plan.pdf
 
 ---
 
-## Ways of Working
+## Architectural Rules & Code Boundaries
 
-- **Proactively update documentation (.md files) without being reminded.**
-  Whenever an architectural pattern, design decision, security contract, or trade-off is implemented:
+### 1. Unidirectional Dependency Rule
+Code never imports sideways between distinct domain features. Dependencies strictly flow downward:
+- `components/ui/` (Primitives) $\to$ Presentation only. Never import Supabase, actions, or models.
+- `components/shared/` $\to$ Reusable product components (`ArtworkCard`, `PriceBadge`, `NfcPrompt`).
+- `app/actions/` $\to$ Server Actions for business logic, mutations, Supabase queries, and external APIs.
+- `types/` $\to$ Pure TypeScript types only; zero runtime code.
+- `utils/` $\to$ Pure utility functions (`format.ts`, `routes.ts`, `crypto.ts`).
+
+### 2. Hard Rules — Never Do These
+1. **No `any`.** Strict TypeScript everywhere; use `unknown` and narrow with Zod.
+2. **No hardcoded routes.** Always import route paths from `@/utils/routes`.
+3. **No client-submitted prices or status values.** Pricing and order state transitions are computed and verified server-side.
+4. **No committing raw `Ogaranya` font files or confidential docs.** Font binaries and `docs/` remain strictly local.
+5. **No inline raw currency formatting.** All currency rendering goes through `@/utils/format`.
+6. **No blanket `'use client'` on route files.** Push client interactivity down to leaf components; keep pages as Server Components for OpenGraph social link metadata.
+7. **No un-idempotent webhook processing.** Verify Paystack's HMAC-SHA512 signature and log event references before processing.
+8. **No client-side security filtering.** Enforce access control in PostgreSQL Row Level Security (RLS), not in React.
+9. **No dead controls.** Rendered buttons and actions must either execute a real behavior or be conditionally hidden.
+
+---
+
+## Ways of Working & Git Hygiene
+
+- **Documentation Git Hygiene:**
+  - `docs/` (`PLAN.md`, `DESIGN.md`, `LEARNING.md`) and `.pdf` files are **internal and local to this machine**. They must **never** be pushed to the public GitHub repository (enforced via `.gitignore`).
+  - Only clean production code, `README.md`, and `AGENTS.md` are committed and pushed.
+- **Proactively update documentation (.md files) without being reminded:**
   - **`docs/DESIGN.md` (Architecture Reference):** Keep it clean, structured, and scannable with diagrams, tables, state machines, tradeoffs, and decisions to defend.
   - **`docs/LEARNING.md` (Study Journal):** Detailed, pedagogical, and deeply educational. Must explain complex topics in depth using simple words, analogies, and step-by-step mechanisms. Never condense it into bare bullet points; it exists to teach someone learning systems engineering from scratch.
   - Keep documentation synchronized immediately at each step without waiting for the owner to ask.
