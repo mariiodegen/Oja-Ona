@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { formatNgn } from "@/utils/format";
+import { routes } from "@/utils/routes";
 
 interface SampleArtwork {
   id: string;
@@ -47,20 +49,12 @@ const sampleArtworks: SampleArtwork[] = [
   },
 ];
 
-function formatNaira(amount: number) {
-  return new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency: "NGN",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-[#faf8f5] text-stone-900">
       {/* Header */}
       <header className="sticky top-0 z-30 bg-[#faf8f5]/90 backdrop-blur-md border-b border-stone-200/80 px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 group">
+        <Link href={routes.home} className="flex items-center gap-2 group">
           <span className="font-display font-serif text-2xl sm:text-3xl tracking-tight text-stone-950">
             Ọjà Ọnà
           </span>
@@ -70,13 +64,13 @@ export default function Home() {
         </Link>
         <nav className="flex items-center gap-4 text-sm font-medium">
           <Link
-            href="/artworks"
+            href={routes.catalog}
             className="hover:text-amber-800 transition-colors"
           >
             Catalog
           </Link>
           <Link
-            href="/scan"
+            href={routes.scan}
             className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-900 text-stone-50 hover:bg-stone-800 transition-all text-xs font-semibold"
           >
             <span>📷</span> Scan Painting
@@ -99,13 +93,13 @@ export default function Home() {
 
         <div className="mt-8 flex flex-col sm:flex-row gap-3 w-full sm:w-auto justify-center">
           <Link
-            href="/artworks"
+            href={routes.catalog}
             className="px-6 py-3.5 rounded-full bg-stone-950 text-stone-50 font-medium text-sm hover:bg-stone-800 transition-all shadow-sm"
           >
             Browse Featured Artworks
           </Link>
           <Link
-            href="/scan"
+            href={routes.scan}
             className="px-6 py-3.5 rounded-full bg-white border border-stone-300 text-stone-900 font-medium text-sm hover:bg-stone-50 transition-all shadow-sm flex items-center justify-center gap-2"
           >
             <span>📷</span> Open Camera Scanner
@@ -170,7 +164,7 @@ export default function Home() {
             </p>
           </div>
           <Link
-            href="/artworks"
+            href={routes.catalog}
             className="text-xs sm:text-sm font-semibold text-amber-900 hover:underline"
           >
             View All →
@@ -212,7 +206,7 @@ export default function Home() {
                       Price
                     </span>
                     <span className="font-display font-serif text-lg font-bold text-stone-950">
-                      {formatNaira(art.priceNgn)}
+                      {formatNgn(art.priceNgn)}
                     </span>
                   </div>
                   <button className="px-3 py-1.5 rounded-lg bg-stone-100 text-stone-800 text-xs font-semibold hover:bg-stone-200 transition-colors">
