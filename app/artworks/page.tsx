@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { getArtworks } from "@/app/actions/artworks";
 import { formatNgn } from "@/utils/format";
@@ -63,10 +64,91 @@ export const metadata = {
   description: "Browse curated contemporary Nigerian physical paintings and artworks.",
 };
 
-export default async function ArtworksCatalogPage() {
+function CatalogGridSkeleton() {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="rounded-2xl bg-white border border-stone-200/80 overflow-hidden shadow-sm animate-pulse">
+          <div className="aspect-[4/3] bg-stone-200" />
+          <div className="p-5 flex flex-col gap-3">
+            <div className="h-6 bg-stone-200 rounded w-3/4" />
+            <div className="h-4 bg-stone-100 rounded w-1/2" />
+            <div className="mt-4 pt-4 border-t border-stone-100 flex justify-between items-center">
+              <div className="h-6 bg-stone-200 rounded w-1/3" />
+              <div className="h-8 bg-stone-200 rounded w-1/4" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+async function ArtworkGrid() {
   const liveArtworks = await getArtworks();
   const artworks = liveArtworks.length > 0 ? liveArtworks : fallbackArtworks;
 
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      {artworks.map((art) => {
+        const primaryImage =
+          art.images?.find((img) => img.is_primary)?.url ||
+          art.images?.[0]?.url ||
+          "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=800&q=80";
+
+        return (
+          <Link
+            key={art.id}
+            href={routes.artwork(art.id)}
+            className="group rounded-2xl bg-white border border-stone-200/80 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col"
+          >
+            <div className="relative aspect-[4/3] bg-stone-100 overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={primaryImage}
+                alt={art.title}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute top-3 right-3 px-2 py-1 rounded bg-stone-950/70 backdrop-blur-sm text-[10px] uppercase font-bold text-stone-50 tracking-wider">
+                Base Verified
+              </div>
+            </div>
+
+            <div className="p-5 flex flex-col flex-1 justify-between">
+              <div>
+                <h2 className="font-display font-serif text-xl text-stone-950 group-hover:text-amber-900 transition-colors">
+                  {art.title}
+                </h2>
+                <p className="text-xs text-stone-500 mt-1 font-medium">
+                  {art.artist?.name || "Independent Artist"} · {art.year}
+                </p>
+                <p className="text-xs text-stone-400 mt-0.5">
+                  {art.medium} · {art.size}
+                </p>
+              </div>
+
+              <div className="mt-5 pt-4 border-t border-stone-100 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] uppercase font-semibold text-stone-400 block tracking-wider">
+                    Price
+                  </span>
+                  <span className="font-display font-serif text-lg font-bold text-stone-950">
+                    {formatNgn(art.price_ngn)}
+                  </span>
+                </div>
+                <span className="px-3 py-1.5 rounded-lg bg-stone-100 text-stone-800 text-xs font-semibold group-hover:bg-amber-100 group-hover:text-amber-900 transition-colors">
+                  View Details →
+                </span>
+              </div>
+            </div>
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+export default function ArtworksCatalogPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[#faf8f5] text-stone-900">
       {/* Navigation Header */}
@@ -101,63 +183,10 @@ export default async function ArtworksCatalogPage() {
           </p>
         </div>
 
-        {/* Gallery Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {artworks.map((art) => {
-            const primaryImage =
-              art.images?.find((img) => img.is_primary)?.url ||
-              art.images?.[0]?.url ||
-              "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=800&q=80";
-
-            return (
-              <Link
-                key={art.id}
-                href={routes.artwork(art.id)}
-                className="group rounded-2xl bg-white border border-stone-200/80 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col"
-              >
-                <div className="relative aspect-[4/3] bg-stone-100 overflow-hidden">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={primaryImage}
-                    alt={art.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-3 right-3 px-2 py-1 rounded bg-stone-950/70 backdrop-blur-sm text-[10px] uppercase font-bold text-stone-50 tracking-wider">
-                    Base Verified
-                  </div>
-                </div>
-
-                <div className="p-5 flex flex-col flex-1 justify-between">
-                  <div>
-                    <h2 className="font-display font-serif text-xl text-stone-950 group-hover:text-amber-900 transition-colors">
-                      {art.title}
-                    </h2>
-                    <p className="text-xs text-stone-500 mt-1 font-medium">
-                      {art.artist?.name || "Independent Artist"} · {art.year}
-                    </p>
-                    <p className="text-xs text-stone-400 mt-0.5">
-                      {art.medium} · {art.size}
-                    </p>
-                  </div>
-
-                  <div className="mt-5 pt-4 border-t border-stone-100 flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] uppercase font-semibold text-stone-400 block tracking-wider">
-                        Price
-                      </span>
-                      <span className="font-display font-serif text-lg font-bold text-stone-950">
-                        {formatNgn(art.price_ngn)}
-                      </span>
-                    </div>
-                    <span className="px-3 py-1.5 rounded-lg bg-stone-100 text-stone-800 text-xs font-semibold group-hover:bg-amber-100 group-hover:text-amber-900 transition-colors">
-                      View Details →
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
+        {/* Streaming Gallery Grid with Suspense Placeholder */}
+        <Suspense fallback={<CatalogGridSkeleton />}>
+          <ArtworkGrid />
+        </Suspense>
       </main>
     </div>
   );

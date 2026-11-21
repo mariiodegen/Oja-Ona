@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getArtworkById } from "@/app/actions/artworks";
@@ -78,7 +79,23 @@ export async function generateMetadata({ params }: ArtworkPageProps) {
   };
 }
 
-export default async function ArtworkDetailPage({ params }: ArtworkPageProps) {
+function ArtworkDetailSkeleton() {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start animate-pulse">
+      <div className="lg:col-span-7 flex flex-col gap-4">
+        <div className="aspect-[4/3] rounded-2xl bg-stone-200" />
+        <div className="h-16 rounded-xl bg-stone-200" />
+      </div>
+      <div className="lg:col-span-5 flex flex-col gap-6">
+        <div className="h-8 bg-stone-200 rounded w-3/4" />
+        <div className="h-4 bg-stone-100 rounded w-1/2" />
+        <div className="h-48 rounded-2xl bg-stone-200" />
+      </div>
+    </div>
+  );
+}
+
+async function ArtworkDetailBody({ params }: ArtworkPageProps) {
   const { id } = await params;
   const artwork = (await getArtworkById(id)) || mockArtworks[id];
 
@@ -90,6 +107,141 @@ export default async function ArtworkDetailPage({ params }: ArtworkPageProps) {
     artwork.images?.find((img) => img.is_primary)?.url ||
     artwork.images?.[0]?.url;
 
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+      {/* Left Column: High-Res Photo Gallery */}
+      <div className="lg:col-span-7 flex flex-col gap-4">
+        <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-stone-100 border border-stone-200/80 shadow-sm">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={primaryImage}
+            alt={artwork.title}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-stone-950/80 backdrop-blur-md text-xs font-semibold text-stone-50 flex items-center gap-1.5">
+            <span>🛡️</span> On-Chain Certificate (Base L2)
+          </div>
+        </div>
+
+        {/* Verification Hardware Tag Badge */}
+        <div className="p-4 rounded-xl bg-amber-50 border border-amber-200/70 flex items-start gap-3">
+          <span className="text-xl">🏷️</span>
+          <div className="text-xs text-amber-900">
+            <strong className="block font-semibold">Physical Tamper-Evident NFC Linked</strong>
+            An encrypted NTAG 424 DNA tag is attached to the stretcher bar. Tapping it with your phone verifies authenticity and confirms safe delivery.
+          </div>
+        </div>
+      </div>
+
+      {/* Right Column: Artwork Metadata & Escrow Checkout */}
+      <div className="lg:col-span-5 flex flex-col gap-6">
+        <div>
+          <span className="text-xs uppercase tracking-widest text-amber-800 font-bold block mb-1">
+            Original Artwork
+          </span>
+          <h1 className="font-display font-serif text-3xl sm:text-4xl text-stone-950 leading-tight">
+            {artwork.title}
+          </h1>
+          <p className="text-sm font-medium text-stone-600 mt-1">
+            by{" "}
+            <span className="text-stone-900 font-semibold">
+              {artwork.artist?.name || "Independent Artist"}
+            </span>{" "}
+            ({artwork.year})
+          </p>
+        </div>
+
+        {/* Price Card */}
+        <div className="p-5 rounded-2xl bg-white border border-stone-200/80 shadow-sm">
+          <span className="text-xs uppercase font-semibold text-stone-400 block tracking-wider">
+            Artwork Price
+          </span>
+          <div className="flex items-baseline gap-2 mt-1">
+            <span className="font-display font-serif text-3xl font-bold text-stone-950">
+              {formatNgn(artwork.price_ngn)}
+            </span>
+            {artwork.price_usd && (
+              <span className="text-xs text-stone-500 font-medium">
+                (approx. ${artwork.price_usd} USD)
+              </span>
+            )}
+          </div>
+
+          {/* Purchase Button */}
+          <Link
+            href={routes.checkout(artwork.id)}
+            className="mt-6 w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-full bg-stone-950 text-stone-50 text-sm font-semibold hover:bg-stone-800 transition-all shadow-sm"
+          >
+            <span>🔒</span> Purchase with Escrow Protection
+          </Link>
+          <p className="text-[11px] text-center text-stone-500 mt-2">
+            Funds are held safely in escrow and only released after delivery is confirmed.
+          </p>
+        </div>
+
+        {/* Physical Specifications */}
+        <div className="p-5 rounded-2xl bg-white border border-stone-200/80 shadow-sm flex flex-col gap-3">
+          <h2 className="text-xs uppercase font-bold text-stone-400 tracking-wider">
+            Specifications
+          </h2>
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            <div>
+              <span className="text-stone-400 block">Medium</span>
+              <span className="font-medium text-stone-800">{artwork.medium}</span>
+            </div>
+            <div>
+              <span className="text-stone-400 block">Dimensions</span>
+              <span className="font-medium text-stone-800">{artwork.size}</span>
+            </div>
+            <div>
+              <span className="text-stone-400 block">Creation Year</span>
+              <span className="font-medium text-stone-800">{artwork.year}</span>
+            </div>
+            <div>
+              <span className="text-stone-400 block">Provenance</span>
+              <span className="font-medium text-amber-900">Base L2 (ERC-721)</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Shipping Rates Breakdown */}
+        <div className="p-5 rounded-2xl bg-white border border-stone-200/80 shadow-sm flex flex-col gap-3">
+          <h2 className="text-xs uppercase font-bold text-stone-400 tracking-wider">
+            Direct Courier Shipping Rates
+          </h2>
+          <div className="flex flex-col gap-2 text-xs">
+            <div className="flex justify-between items-center py-1 border-b border-stone-100">
+              <span className="text-stone-600">Lagos Metropolitan</span>
+              <span className="font-semibold text-stone-900">{formatNgn(artwork.shipping_lagos)}</span>
+            </div>
+            <div className="flex justify-between items-center py-1 border-b border-stone-100">
+              <span className="text-stone-600">Rest of Nigeria</span>
+              <span className="font-semibold text-stone-900">{formatNgn(artwork.shipping_nigeria)}</span>
+            </div>
+            <div className="flex justify-between items-center py-1">
+              <span className="text-stone-600">International (DHL / FedEx)</span>
+              <span className="font-semibold text-stone-900">{formatNgn(artwork.shipping_intl)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Artist Story */}
+        {artwork.artist?.bio && (
+          <div className="p-5 rounded-2xl bg-white border border-stone-200/80 shadow-sm flex flex-col gap-2">
+            <h2 className="text-xs uppercase font-bold text-stone-400 tracking-wider">
+              About the Artist
+            </h2>
+            <p className="text-xs leading-relaxed text-stone-600">
+              {artwork.artist.bio}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function ArtworkDetailPage({ params }: ArtworkPageProps) {
   return (
     <div className="min-h-screen flex flex-col bg-[#faf8f5] text-stone-900">
       {/* Header */}
@@ -103,138 +255,11 @@ export default async function ArtworkDetailPage({ params }: ArtworkPageProps) {
         <div className="w-16" /> {/* Balance spacer */}
       </header>
 
-      {/* Main Detail View */}
+      {/* Main Detail View with Streaming Suspense Boundary */}
       <main className="max-w-6xl mx-auto px-6 py-10 w-full flex-1">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-          {/* Left Column: High-Res Photo Gallery */}
-          <div className="lg:col-span-7 flex flex-col gap-4">
-            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-stone-100 border border-stone-200/80 shadow-sm">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={primaryImage}
-                alt={artwork.title}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-stone-950/80 backdrop-blur-md text-xs font-semibold text-stone-50 flex items-center gap-1.5">
-                <span>🛡️</span> On-Chain Certificate (Base L2)
-              </div>
-            </div>
-
-            {/* Verification Hardware Tag Badge */}
-            <div className="p-4 rounded-xl bg-amber-50 border border-amber-200/70 flex items-start gap-3">
-              <span className="text-xl">🏷️</span>
-              <div className="text-xs text-amber-900">
-                <strong className="block font-semibold">Physical Tamper-Evident NFC Linked</strong>
-                An encrypted NTAG 424 DNA tag is attached to the stretcher bar. Tapping it with your phone verifies authenticity and confirms safe delivery.
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column: Artwork Metadata & Escrow Checkout */}
-          <div className="lg:col-span-5 flex flex-col gap-6">
-            <div>
-              <span className="text-xs uppercase tracking-widest text-amber-800 font-bold block mb-1">
-                Original Artwork
-              </span>
-              <h1 className="font-display font-serif text-3xl sm:text-4xl text-stone-950 leading-tight">
-                {artwork.title}
-              </h1>
-              <p className="text-sm font-medium text-stone-600 mt-1">
-                by{" "}
-                <span className="text-stone-900 font-semibold">
-                  {artwork.artist?.name || "Independent Artist"}
-                </span>{" "}
-                ({artwork.year})
-              </p>
-            </div>
-
-            {/* Price Card */}
-            <div className="p-5 rounded-2xl bg-white border border-stone-200/80 shadow-sm">
-              <span className="text-xs uppercase font-semibold text-stone-400 block tracking-wider">
-                Artwork Price
-              </span>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="font-display font-serif text-3xl font-bold text-stone-950">
-                  {formatNgn(artwork.price_ngn)}
-                </span>
-                {artwork.price_usd && (
-                  <span className="text-xs text-stone-500 font-medium">
-                    (approx. ${artwork.price_usd} USD)
-                  </span>
-                )}
-              </div>
-
-              {/* Purchase Button */}
-              <Link
-                href={routes.checkout(artwork.id)}
-                className="mt-6 w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-full bg-stone-950 text-stone-50 text-sm font-semibold hover:bg-stone-800 transition-all shadow-sm"
-              >
-                <span>🔒</span> Purchase with Escrow Protection
-              </Link>
-              <p className="text-[11px] text-center text-stone-500 mt-2">
-                Funds are held safely in escrow and only released after delivery is confirmed.
-              </p>
-            </div>
-
-            {/* Physical Specifications */}
-            <div className="p-5 rounded-2xl bg-white border border-stone-200/80 shadow-sm flex flex-col gap-3">
-              <h2 className="text-xs uppercase font-bold text-stone-400 tracking-wider">
-                Specifications
-              </h2>
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div>
-                  <span className="text-stone-400 block">Medium</span>
-                  <span className="font-medium text-stone-800">{artwork.medium}</span>
-                </div>
-                <div>
-                  <span className="text-stone-400 block">Dimensions</span>
-                  <span className="font-medium text-stone-800">{artwork.size}</span>
-                </div>
-                <div>
-                  <span className="text-stone-400 block">Creation Year</span>
-                  <span className="font-medium text-stone-800">{artwork.year}</span>
-                </div>
-                <div>
-                  <span className="text-stone-400 block">Provenance</span>
-                  <span className="font-medium text-amber-900">Base L2 (ERC-721)</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Shipping Rates Breakdown */}
-            <div className="p-5 rounded-2xl bg-white border border-stone-200/80 shadow-sm flex flex-col gap-3">
-              <h2 className="text-xs uppercase font-bold text-stone-400 tracking-wider">
-                Direct Courier Shipping Rates
-              </h2>
-              <div className="flex flex-col gap-2 text-xs">
-                <div className="flex justify-between items-center py-1 border-b border-stone-100">
-                  <span className="text-stone-600">Lagos Metropolitan</span>
-                  <span className="font-semibold text-stone-900">{formatNgn(artwork.shipping_lagos)}</span>
-                </div>
-                <div className="flex justify-between items-center py-1 border-b border-stone-100">
-                  <span className="text-stone-600">Rest of Nigeria</span>
-                  <span className="font-semibold text-stone-900">{formatNgn(artwork.shipping_nigeria)}</span>
-                </div>
-                <div className="flex justify-between items-center py-1">
-                  <span className="text-stone-600">International (DHL / FedEx)</span>
-                  <span className="font-semibold text-stone-900">{formatNgn(artwork.shipping_intl)}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Artist Story */}
-            {artwork.artist?.bio && (
-              <div className="p-5 rounded-2xl bg-white border border-stone-200/80 shadow-sm flex flex-col gap-2">
-                <h2 className="text-xs uppercase font-bold text-stone-400 tracking-wider">
-                  About the Artist
-                </h2>
-                <p className="text-xs leading-relaxed text-stone-600">
-                  {artwork.artist.bio}
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
+        <Suspense fallback={<ArtworkDetailSkeleton />}>
+          <ArtworkDetailBody params={params} />
+        </Suspense>
       </main>
     </div>
   );
