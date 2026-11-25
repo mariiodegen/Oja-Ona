@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getArtistProfile } from "@/app/actions/artworks";
+import { getArtistProfile } from "@/lib/queries/artworks";
 import { formatNgn } from "@/utils/format";
 import { routes } from "@/utils/routes";
 

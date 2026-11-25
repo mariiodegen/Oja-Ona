@@ -20,17 +20,7 @@ export function createPublicClient() {
   }
 
   return createSupabaseClient(supabaseUrl, supabaseAnonKey, {
-    global: {
-      fetch: (url, options) =>
-        fetch(url, {
-          ...options,
-          next: { revalidate: 60 },
-        }),
-    },
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-    },
+    accessToken: async () => null,
   });
 }
 

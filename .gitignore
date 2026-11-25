@@ -36,3 +36,7 @@ Ogaranya*/
 docs/
 *.pdf
 CLAUDE.md
+
+# Local AI Agent Skills & Tooling
+.agents/
+skills-lock.json

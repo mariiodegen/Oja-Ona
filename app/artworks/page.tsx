@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { getArtworks } from "@/app/actions/artworks";
+import { getArtworks } from "@/lib/queries/artworks";
 import { formatNgn } from "@/utils/format";
 import { routes } from "@/utils/routes";
 
