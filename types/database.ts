@@ -115,3 +115,20 @@ export interface Dispute {
   created_at: string;
   resolved_at: string | null;
 }
+
+export interface MatchArtworkResult {
+  artwork_id: string;
+  image_id: string;
+  title: string;
+  artist_id: string;
+  artist_name: string;
+  artist_avatar_url: string | null;
+  medium: string;
+  size: string;
+  year: number;
+  price_ngn: number;
+  image_url: string;
+  distance: number;
+  similarity: number;
+}
+

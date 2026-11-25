@@ -2,6 +2,7 @@
 
 import { createClient, createPublicClient } from "@/lib/supabase/server";
 import { artworkSchema, type ArtworkInput } from "@/lib/validations/artwork";
+import { generateImageEmbedding } from "@/lib/vision/embeddings";
 import type { Artwork, ArtworkImage, User } from "@/types/database";
 
 export interface ArtworkWithRelations extends Artwork {
@@ -174,11 +175,19 @@ export async function createArtwork(
       };
     }
 
-    // 2. Insert image records
+    // 2. Insert image records with pgvector 768-dim CLIP embedding
     if (imageUrls.length > 0) {
+      let primaryEmbedding: number[] | null = null;
+      try {
+        primaryEmbedding = await generateImageEmbedding(imageUrls[0]);
+      } catch (embErr) {
+        console.warn("Could not generate image embedding during artwork creation:", embErr);
+      }
+
       const imageRecords = imageUrls.map((url, index) => ({
         artwork_id: artwork.id,
         url,
+        embedding: index === 0 ? primaryEmbedding : null,
         is_primary: index === 0,
       }));
 
